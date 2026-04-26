@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vignesh Mokshith Francis — AI/GenAI Engineer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { serif: ["'Instrument Serif'", 'serif'] } } } };
+  </script>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/framer-motion@11.18.2/dist/framer-motion.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #000; font-family: system-ui, sans-serif; }
+
+    .liquid-glass {
+      background: rgba(255,255,255,0.01);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .liquid-glass::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.4px;
+      background: linear-gradient(180deg,
+        rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+        rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+        rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    ::placeholder { color: rgba(255,255,255,0.4); }
+    a { text-decoration: none; }
+    button, input { font-family: inherit; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+    .float { animation: float 6s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { useRef, useEffect, useState, useCallback } = React;
+  const { motion, useInView, AnimatePresence } = window.Motion;
+
+  /* ── SVG Icons ── */
+  const IconMail = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,6 12,13 2,6"/></svg>;
+  const IconPhone = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 01.22 1.18 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.55-.55a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>;
+  const IconLinkedin = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>;
+  const IconGithub = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>;
+  const IconArrow = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>;
+  const IconGlobe = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>;
+  const IconCheck = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
+
+  /* ── Fade hook ── */
+  function useFadeVideo(videoRef) {
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+      video.style.opacity = 0;
+      let fadeOutDone = false;
+
+      function rAFfade(from, to, dur, done) {
+        let start = null;
+        function step(ts) {
+          if (!start) start = ts;
+          const p = Math.min((ts - start) / dur, 1);
+          video.style.opacity = from + (to - from) * p;
+          if (p < 1) requestAnimationFrame(step);
+          else done && done();
+        }
+        requestAnimationFrame(step);
+      }
+
+      const onCanPlay = () => { video.play().catch(()=>{}); rAFfade(0, 1, 500); };
+      const onTimeUpdate = () => {
+        if (!video.duration) return;
+        const rem = video.duration - video.currentTime;
+        if (rem <= 0.55 && !fadeOutDone) {
+          fadeOutDone = true;
+          rAFfade(parseFloat(video.style.opacity)||1, 0, 500);
+        }
+      };
+      const onEnded = () => {
+        fadeOutDone = false;
+        video.style.opacity = 0;
+        setTimeout(() => { video.currentTime = 0; video.play().catch(()=>{}); rAFfade(0, 1, 500); }, 100);
+      };
+
+      video.addEventListener('canplay', onCanPlay);
+      video.addEventListener('timeupdate', onTimeUpdate);
+      video.addEventListener('ended', onEnded);
+      return () => {
+        video.removeEventListener('canplay', onCanPlay);
+        video.removeEventListener('timeupdate', onTimeUpdate);
+        video.removeEventListener('ended', onEnded);
+      };
+    }, []);
+  }
+
+  /* ── Reveal wrapper (CSS-based, no framer-motion list warning) ── */
+  function Reveal({ children, delay = 0, x = 0, y = 40 }) {
+    const ref = useRef(null);
+    const [visible, setVisible] = useState(false);
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) return;
+      const obs = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
+      }, { rootMargin: '-80px' });
+      obs.observe(el);
+      return () => obs.disconnect();
+    }, []);
+    return (
+      <div ref={ref} style={{
+        opacity: visible ? 1 : 0,
+        transform: visible ? 'none' : `translate(${x}px, ${y}px)`,
+        transition: `opacity 0.8s cubic-bezier(0.22,1,0.36,1) ${delay}s, transform 0.8s cubic-bezier(0.22,1,0.36,1) ${delay}s`
+      }}>
+        {children}
+      </div>
+    );
+  }
+
+  /* ── Label ── */
+  function Label({ children }) {
+    return <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase', marginBottom: '1rem', margin: '0 0 1rem' }}>{children}</p>;
+  }
+
+  /* ── Interactive Particle Background (Canvas 2D — reliable cross-browser) ── */
+  function ThreeBackground() {
+    const containerRef = useRef(null);
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const canvas = document.createElement('canvas');
+      canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;pointer-events:none;';
+      container.appendChild(canvas);
+
+      let W = container.clientWidth || window.innerWidth;
+      let H = container.clientHeight || window.innerHeight;
+      canvas.width = W * window.devicePixelRatio;
+      canvas.height = H * window.devicePixelRatio;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      // State
+      let mouseX = W / 2, mouseY = H / 2;
+      let scrollProg = 0, targetScroll = 0;
+
+      const COUNT = 90;
+      const pts = Array.from({ length: COUNT }, () => ({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5,
+        r: 1.5 + Math.random() * 1.5,
+      }));
+
+      // Floating shapes (projected 3D wireframes as 2D polygons)
+      const SHAPES = [
+        { cx: W*0.75, cy: H*0.3, r: 60, sides: 6, rot: 0, rSpeed: 0.008 },
+        { cx: W*0.2,  cy: H*0.6, r: 45, sides: 8, rot: 1, rSpeed: -0.006 },
+        { cx: W*0.85, cy: H*0.7, r: 35, sides: 5, rot: 2, rSpeed: 0.01 },
+        { cx: W*0.1,  cy: H*0.2, r: 28, sides: 3, rot: 0.5, rSpeed: -0.012 },
+      ];
+
+      const onMouseMove = (e) => { mouseX = e.clientX; mouseY = e.clientY; };
+      const onScroll = () => {
+        const max = document.body.scrollHeight - window.innerHeight;
+        targetScroll = Math.min(window.scrollY / Math.max(max, 1), 1);
+      };
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      let raf;
+      function draw() {
+        raf = requestAnimationFrame(draw);
+        scrollProg += (targetScroll - scrollProg) * 0.05;
+
+        ctx.clearRect(0, 0, W, H);
+
+        const speed = 1 + scrollProg * 3;
+        const maxDist = 120 + scrollProg * 80;
+        const REPEL = 80;
+
+        // Update particles
+        for (const p of pts) {
+          p.x += p.vx * speed;
+          p.y += p.vy * speed;
+          if (p.x < 0 || p.x > W) p.vx *= -1;
+          if (p.y < 0 || p.y > H) p.vy *= -1;
+
+          // Repel from mouse
+          const dx = p.x - mouseX, dy = p.y - mouseY;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < REPEL && d > 1) {
+            p.x += (dx/d) * (REPEL-d) * 0.04;
+            p.y += (dy/d) * (REPEL-d) * 0.04;
+          }
+        }
+
+        // Draw connections
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i+1; j < pts.length; j++) {
+            const dx = pts[i].x-pts[j].x, dy = pts[i].y-pts[j].y;
+            const d = Math.sqrt(dx*dx+dy*dy);
+            if (d < maxDist) {
+              const alpha = (1 - d/maxDist) * (0.25 + scrollProg * 0.2);
+              ctx.beginPath();
+              ctx.moveTo(pts[i].x, pts[i].y);
+              ctx.lineTo(pts[j].x, pts[j].y);
+              ctx.strokeStyle = `rgba(255,255,255,${alpha})`;
+              ctx.lineWidth = 0.8;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw particles
+        for (const p of pts) {
+          const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3);
+          glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+          glow.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI*2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+          ctx.fillStyle = 'rgba(255,255,255,0.95)';
+          ctx.fill();
+        }
+
+        // Draw wireframe shapes
+        for (const s of SHAPES) {
+          s.rot += s.rSpeed * (1 + scrollProg * 2);
+          const op = 0.12 + scrollProg * 0.1;
+          ctx.strokeStyle = `rgba(255,255,255,${op})`;
+          ctx.lineWidth = 1;
+          // Outer polygon
+          ctx.beginPath();
+          for (let k = 0; k <= s.sides; k++) {
+            const a = s.rot + (k/s.sides)*Math.PI*2;
+            const x = s.cx + Math.cos(a)*s.r;
+            const y = s.cy + Math.sin(a)*s.r;
+            k===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+          }
+          ctx.stroke();
+          // Inner spokes
+          for (let k = 0; k < s.sides; k+=2) {
+            const a = s.rot + (k/s.sides)*Math.PI*2;
+            ctx.beginPath();
+            ctx.moveTo(s.cx, s.cy);
+            ctx.lineTo(s.cx+Math.cos(a)*s.r, s.cy+Math.sin(a)*s.r);
+            ctx.stroke();
+          }
+        }
+
+        // Mouse orb
+        const orbAlpha = 0.15 - scrollProg * 0.1;
+        if (orbAlpha > 0) {
+          const orbGrad = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 40);
+          orbGrad.addColorStop(0, `rgba(255,255,255,${orbAlpha})`);
+          orbGrad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.beginPath();
+          ctx.arc(mouseX, mouseY, 40, 0, Math.PI*2);
+          ctx.fillStyle = orbGrad;
+          ctx.fill();
+        }
+      }
+      draw();
+
+      const onResize = () => {
+        W = container.clientWidth || window.innerWidth;
+        H = container.clientHeight || window.innerHeight;
+        canvas.width = W * window.devicePixelRatio;
+        canvas.height = H * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        // Reposition shapes
+        SHAPES[0].cx=W*0.75; SHAPES[0].cy=H*0.3;
+        SHAPES[1].cx=W*0.2;  SHAPES[1].cy=H*0.6;
+        SHAPES[2].cx=W*0.85; SHAPES[2].cy=H*0.7;
+        SHAPES[3].cx=W*0.1;  SHAPES[3].cy=H*0.2;
+      };
+      window.addEventListener('resize', onResize);
+
+      return () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onResize);
+        if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      };
+    }, []);
+
+    return <div ref={containerRef} style={{ position: 'absolute', inset: 0, zIndex: 0 }} />;
+  }
+
+  /* ── Navbar ── */
+  function Navbar() {
+    const [scrolled, setScrolled] = useState(false);
+    useEffect(() => {
+      const fn = () => setScrolled(window.scrollY > 40);
+      window.addEventListener('scroll', fn);
+      return () => window.removeEventListener('scroll', fn);
+    }, []);
+
+    const links = ['About','Projects','Skills','Experience','Contact'];
+
+    return (
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50, padding: '1.25rem 1.5rem', transition: 'all 0.3s' }}>
+        <div className="liquid-glass rounded-full max-w-5xl mx-auto px-6 py-3 flex items-center justify-between" style={{ transition: 'background 0.3s', background: scrolled ? 'rgba(255,255,255,0.03)' : 'rgba(255,255,255,0.01)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <IconGlobe />
+            <span style={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}>VMF</span>
+            <div className="hidden md:flex" style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginLeft: '2rem' }}>
+              {links.map(l => (
+                <a key={l} href={`#${l.toLowerCase()}`} style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 500, transition: 'color 0.2s' }}
+                  onMouseEnter={e => e.target.style.color='white'}
+                  onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.7)'}
+                >{l}</a>
+              ))}
+            </div>
+          </div>
+          <a href="mailto:vinnyvvinny8@gmail.com" className="liquid-glass rounded-full" style={{ padding: '0.5rem 1.5rem', color: 'white', fontSize: '0.85rem', fontWeight: 500, border: 'none', cursor: 'pointer', display: 'block' }}>
+            Hire me
+          </a>
+        </div>
+      </nav>
+    );
+  }
+
+  /* ── Hero ── */
+  function Hero() {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { const t = setTimeout(() => setMounted(true), 100); return () => clearTimeout(t); }, []);
+
+    return (
+      <section style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+        <ThreeBackground />
+        {/* Dark gradient so text is readable */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.4) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, background: 'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 25%, transparent 65%, rgba(0,0,0,0.7) 100%)' }} />
+
+        {/* Content */}
+        <div style={{ position: 'relative', zIndex: 2, flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 1.5rem 4rem', transform: 'translateY(-8%)' }}>
+          <div style={{ opacity: mounted?1:0, transform: mounted?'none':'translateY(20px)', transition: 'opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s' }}>
+            <Label>AI · GenAI · MLOps · Cloud</Label>
+          </div>
+
+          <h1
+            style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2.8rem, 7vw, 7rem)', color: 'white', letterSpacing: '-0.03em', lineHeight: 1, fontWeight: 400, marginBottom: '1.5rem', whiteSpace: 'nowrap', opacity: mounted?1:0, transform: mounted?'none':'translateY(40px)', transition: 'opacity 0.9s cubic-bezier(0.22,1,0.36,1) 0.25s, transform 0.9s cubic-bezier(0.22,1,0.36,1) 0.25s' }}
+            dangerouslySetInnerHTML={{ __html: 'Vignesh <em>Mokshith</em> Francis' }}
+          />
+
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '1.1rem', maxWidth: '32rem', lineHeight: 1.7, marginBottom: '2.5rem', opacity: mounted?1:0, transform: mounted?'none':'translateY(20px)', transition: 'opacity 0.8s ease 0.45s, transform 0.8s ease 0.45s' }}>
+            Final-year CS student building production-grade AI/ML systems, cloud-native applications, and GenAI products that ship.
+          </p>
+
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', opacity: mounted?1:0, transform: mounted?'none':'translateY(20px)', transition: 'opacity 0.8s ease 0.6s, transform 0.8s ease 0.6s' }}>
+            <a href="#projects" className="liquid-glass rounded-full" style={{ padding: '0.75rem 2rem', color: 'white', fontSize: '0.875rem', fontWeight: 500 }}>View Work</a>
+            <a href="#contact" style={{ padding: '0.75rem 2rem', background: 'white', borderRadius: '9999px', color: 'black', fontSize: '0.875rem', fontWeight: 600 }}>Get in Touch</a>
+          </div>
+        </div>
+
+        {/* Social row */}
+        <div style={{ position: 'relative', zIndex: 10, display: 'flex', justifyContent: 'center', gap: '1rem', paddingBottom: '3rem' }}>
+          {[
+            { icon: <IconGithub />, href: 'https://github.com/Mokshith-11', label: 'github' },
+            { icon: <IconLinkedin />, href: '#', label: 'linkedin' },
+            { icon: <IconMail />, href: 'mailto:vinnyvvinny8@gmail.com', label: 'mail' },
+          ].map((s) => (
+            <a key={s.label} href={s.href} className="liquid-glass rounded-full" style={{ padding: '1rem', color: 'rgba(255,255,255,0.8)', display: 'flex', transition: 'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.color='white'}
+              onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.8)'}
+            >{s.icon}</a>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  /* ── About ── */
+  function About() {
+    return (
+      <section id="about" style={{ background: 'radial-gradient(ellipse at top, rgba(255,255,255,0.03) 0%, transparent 70%), #000', padding: '8rem 1.5rem 4rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal>
+            <Label>About</Label>
+          </Reveal>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', color: 'white', lineHeight: 1.1, letterSpacing: '-0.03em', fontWeight: 400, marginBottom: '3rem' }}
+              dangerouslySetInnerHTML={{__html:`Pioneering <em style="color:rgba(255,255,255,0.5)">AI systems</em><br/>built to ship, scale, <em style="color:rgba(255,255,255,0.5)">and last.</em>`}}
+            />
+          </Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+            {[
+              { stat: '95.8%', label: 'Detection accuracy — AudioGuard CNN+BiLSTM model' },
+              { stat: '40%', label: 'SQL performance boost at Veena Computer internship' },
+              { stat: '4+', label: 'Cloud certifications — Oracle, AWS, Google Cloud' },
+              { stat: '268-d', label: 'Feature pipeline: MFCC, Mel, Chroma, Spectral, ZCR' },
+            ].map((item, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="liquid-glass rounded-3xl" style={{ padding: '2rem' }}>
+                  <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: '3rem', color: 'white', lineHeight: 1, marginBottom: '0.5rem', fontWeight: 400 }}>
+                    <em>{item.stat}</em>
+                  </div>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>{item.label}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Projects ── */
+  /* ── Project Canvas (themed 3D per project) ── */
+  function ProjectCanvas({ sceneType, hovered }) {
+    const canvasRef = useRef(null);
+    const stateRef = useRef({ mouseX: 0, mouseY: 0 });
+
+    useEffect(() => { stateRef.current.hovered = hovered; }, [hovered]);
+
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      if (!canvas || !window.THREE) return;
+      const THREE = window.THREE;
+      const container = canvas.parentElement;
+      let W = container.clientWidth, H = container.clientHeight;
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 100);
+      camera.position.z = 8;
+
+      const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setSize(W, H);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      let updater = null;
+
+      /* ── AUDIO: waveform bars + pulse ring (AudioGuard) ── */
+      if (sceneType === 'audio') {
+        const BAR = 42;
+        const bars = [];
+        for (let i = 0; i < BAR; i++) {
+          const geo = new THREE.BoxGeometry(0.17, 1, 0.17);
+          const mat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 });
+          const m = new THREE.Mesh(geo, mat);
+          m.position.x = (i - BAR / 2) * 0.27;
+          scene.add(m);
+          bars.push({ mesh: m, phase: Math.random() * Math.PI * 2, freq: 0.4 + Math.random() * 2 });
+        }
+        const PCNT = 64;
+        const ppos = new Float32Array(PCNT * 3);
+        const pGeo = new THREE.BufferGeometry();
+        pGeo.setAttribute('position', new THREE.BufferAttribute(ppos, 3));
+        scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.07, transparent: true, opacity: 0.45 })));
+        updater = (t) => {
+          const k = stateRef.current.hovered ? 1.6 : 1;
+          bars.forEach(({ mesh, phase, freq }) => {
+            const h = (0.15 + Math.abs(Math.sin(t * 0.0012 * freq + phase)) * 2.8) * k;
+            mesh.scale.y = h; mesh.position.y = h / 2 - 1.3;
+          });
+          for (let i = 0; i < PCNT; i++) {
+            const a = (i / PCNT) * Math.PI * 2;
+            const r = 2.8 + Math.sin(t * 0.002 + a * 4) * 0.5 * k;
+            ppos[i * 3] = Math.cos(a) * r; ppos[i * 3 + 1] = Math.sin(a) * r; ppos[i * 3 + 2] = 0;
+          }
+          pGeo.attributes.position.needsUpdate = true;
+          camera.position.x += (stateRef.current.mouseX * 2 - camera.position.x) * 0.05;
+          camera.position.y += (stateRef.current.mouseY * 1.2 - camera.position.y) * 0.05;
+          camera.lookAt(0, 0, 0);
+        };
+      }
+
+      /* ── NETWORK: node graph (NexusForge) ── */
+      else if (sceneType === 'network') {
+        const N = 35;
+        const pos = new Float32Array(N * 3);
+        const vel = [];
+        for (let i = 0; i < N; i++) {
+          pos[i*3]=(Math.random()-0.5)*10; pos[i*3+1]=(Math.random()-0.5)*6; pos[i*3+2]=(Math.random()-0.5)*4;
+          vel.push({x:(Math.random()-0.5)*0.014,y:(Math.random()-0.5)*0.014,z:(Math.random()-0.5)*0.007});
+        }
+        const ptGeo = new THREE.BufferGeometry();
+        ptGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        scene.add(new THREE.Points(ptGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.14, transparent: true, opacity: 0.9 })));
+        const lBuf = new Float32Array(N * N * 6);
+        const lGeo = new THREE.BufferGeometry();
+        lGeo.setAttribute('position', new THREE.BufferAttribute(lBuf, 3));
+        scene.add(new THREE.LineSegments(lGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12 })));
+        const core = new THREE.Mesh(new THREE.IcosahedronGeometry(0.7, 2),
+          new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.18 }));
+        scene.add(core);
+        updater = (t) => {
+          const sp = stateRef.current.hovered ? 1.7 : 1;
+          const mx = stateRef.current.mouseX * 5, my = stateRef.current.mouseY * 3;
+          for (let i = 0; i < N; i++) {
+            pos[i*3]+=vel[i].x*sp; pos[i*3+1]+=vel[i].y*sp; pos[i*3+2]+=vel[i].z*sp;
+            if (Math.abs(pos[i*3])>5) vel[i].x*=-1;
+            if (Math.abs(pos[i*3+1])>3) vel[i].y*=-1;
+            if (Math.abs(pos[i*3+2])>2) vel[i].z*=-1;
+            const dx=mx-pos[i*3], dy=my-pos[i*3+1], d=Math.sqrt(dx*dx+dy*dy);
+            if (d<3){ pos[i*3]+=dx*0.003; pos[i*3+1]+=dy*0.003; }
+          }
+          ptGeo.attributes.position.needsUpdate = true;
+          let li=0;
+          for (let i=0;i<N;i++) for (let j=i+1;j<N;j++) {
+            const dx=pos[i*3]-pos[j*3],dy=pos[i*3+1]-pos[j*3+1],dz=pos[i*3+2]-pos[j*3+2];
+            if (dx*dx+dy*dy+dz*dz<18){lBuf[li++]=pos[i*3];lBuf[li++]=pos[i*3+1];lBuf[li++]=pos[i*3+2];lBuf[li++]=pos[j*3];lBuf[li++]=pos[j*3+1];lBuf[li++]=pos[j*3+2];}
+          }
+          lGeo.setDrawRange(0,li/3); lGeo.attributes.position.needsUpdate=true;
+          core.rotation.x+=0.008*sp; core.rotation.y+=0.012*sp;
+        };
+      }
+
+      /* ── DNA helix (Hospital) ── */
+      else if (sceneType === 'dna') {
+        const SEG = 70, TURNS = 3;
+        for (let i = 0; i < SEG; i++) {
+          const t0 = (i / SEG) * TURNS * Math.PI * 2;
+          const y = (i / SEG) * 9 - 4.5;
+          const r = 1.6;
+          [0, Math.PI].forEach((offset, si) => {
+            const m = new THREE.Mesh(
+              new THREE.SphereGeometry(0.09, 8, 8),
+              new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: si===0?0.9:0.55 })
+            );
+            m.position.set(Math.cos(t0+offset)*r, y, Math.sin(t0+offset)*r);
+            scene.add(m);
+          });
+          if (i % 5 === 0) {
+            const rg = new THREE.Mesh(
+              new THREE.CylinderGeometry(0.03, 0.03, r*2, 6),
+              new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.22 })
+            );
+            rg.position.set(0, y, 0);
+            rg.rotation.z = Math.PI / 2; rg.rotation.x = t0;
+            scene.add(rg);
+          }
+        }
+        updater = (t) => {
+          const sp = stateRef.current.hovered ? 1.4 : 0.7;
+          scene.rotation.y = t * 0.001 * sp + stateRef.current.mouseX * 0.6;
+          scene.rotation.x = stateRef.current.mouseY * 0.25;
+        };
+      }
+
+      /* ── EQUALIZER: rotating cubes grid (Spotify/Netflix) ── */
+      else if (sceneType === 'equalizer') {
+        const COLS=12, ROWS=7;
+        const cubes = [];
+        for (let c=0;c<COLS;c++) for (let r=0;r<ROWS;r++) {
+          const m = new THREE.Mesh(
+            new THREE.BoxGeometry(0.38, 0.38, 0.38),
+            new THREE.MeshBasicMaterial({ color:0xffffff, wireframe:true, transparent:true, opacity:0.12+Math.random()*0.25 })
+          );
+          m.position.set((c-COLS/2)*0.58,(r-ROWS/2)*0.58,0);
+          scene.add(m);
+          cubes.push({ mesh:m, phase:Math.random()*Math.PI*2, c });
+        }
+        updater = (t) => {
+          const sp = stateRef.current.hovered ? 1.8 : 1;
+          cubes.forEach(({mesh,phase,c})=>{
+            mesh.rotation.x+=0.009*sp; mesh.rotation.y+=0.007*sp;
+            const p=Math.sin(t*0.002*sp+phase+c*0.4)*0.5;
+            mesh.material.opacity=0.07+Math.max(0,p)*0.55;
+            mesh.scale.setScalar(0.8+Math.max(0,p)*0.5);
+          });
+          scene.rotation.y+=(-stateRef.current.mouseX*0.35-scene.rotation.y)*0.05;
+          scene.rotation.x+=(-stateRef.current.mouseY*0.2-scene.rotation.x)*0.05;
+        };
+      }
+
+      /* ── BLOOM: mandala particles (Sri Krishna Bhavan) ── */
+      else if (sceneType === 'bloom') {
+        const CNT=130;
+        const pos = new Float32Array(CNT*3), ori = new Float32Array(CNT*3);
+        const vel2 = [];
+        for (let i=0;i<CNT;i++){
+          const a=(i/CNT)*Math.PI*2*(Math.floor(i/20)+1);
+          const rr=0.8+(i%6)*0.7;
+          const x=Math.cos(a)*rr, y=Math.sin(a)*rr, z=(Math.random()-0.5)*1.5;
+          pos[i*3]=ori[i*3]=x; pos[i*3+1]=ori[i*3+1]=y; pos[i*3+2]=ori[i*3+2]=z;
+          vel2.push({ phase:Math.random()*Math.PI*2, speed:0.4+Math.random()*0.8 });
+        }
+        const ptGeo2 = new THREE.BufferGeometry();
+        ptGeo2.setAttribute('position', new THREE.BufferAttribute(pos,3));
+        scene.add(new THREE.Points(ptGeo2, new THREE.PointsMaterial({color:0xffffff,size:0.09,transparent:true,opacity:0.82})));
+        for (let r=1;r<=4;r++){
+          const rg=new THREE.Mesh(new THREE.RingGeometry(r*0.85,r*0.85+0.025,72),
+            new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.07,side:THREE.DoubleSide}));
+          scene.add(rg);
+        }
+        updater = (t)=>{
+          const sp=stateRef.current.hovered?1.6:1;
+          for (let i=0;i<CNT;i++){
+            const w=Math.sin(t*0.0012*vel2[i].speed+vel2[i].phase)*0.35*sp;
+            pos[i*3]=ori[i*3]+Math.cos(vel2[i].phase+t*0.0004)*w;
+            pos[i*3+1]=ori[i*3+1]+Math.sin(vel2[i].phase+t*0.0004)*w;
+          }
+          ptGeo2.attributes.position.needsUpdate=true;
+          scene.rotation.z+=0.003*sp;
+          camera.position.x+=(stateRef.current.mouseX*2-camera.position.x)*0.05;
+          camera.position.y+=(stateRef.current.mouseY*1.5-camera.position.y)*0.05;
+          camera.lookAt(0,0,0);
+        };
+      }
+
+      const onMM = (e) => {
+        const rect=container.getBoundingClientRect();
+        stateRef.current.mouseX=((e.clientX-rect.left)/W)*2-1;
+        stateRef.current.mouseY=-(((e.clientY-rect.top)/H)*2-1);
+      };
+      container.addEventListener('mousemove', onMM);
+
+      let raf2;
+      function loop(t){ raf2=requestAnimationFrame(loop); if(updater)updater(t); renderer.render(scene,camera); }
+      requestAnimationFrame(loop);
+
+      const onResize2=()=>{ W=container.clientWidth;H=container.clientHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H); };
+      window.addEventListener('resize',onResize2);
+      return ()=>{ cancelAnimationFrame(raf2);container.removeEventListener('mousemove',onMM);window.removeEventListener('resize',onResize2);renderer.dispose(); };
+    }, [sceneType]);
+
+    return <canvas ref={canvasRef} style={{ width:'100%', height:'100%', display:'block' }} />;
+  }
+
+  const PROJECTS = [
+    {
+      title: 'AudioGuard',
+      tag: 'AI · SaaS',
+      desc: 'Production-grade deepfake audio detection Micro-SaaS using CNN + BiLSTM + AudioLM-style self-attention achieving 95.8% accuracy. Deployed on Streamlit Cloud with Lemon Squeezy billing, marketed on ProductHunt, Reddit & IndieHackers.',
+      stack: ['Python', 'Streamlit', 'CNN', 'BiLSTM', 'Librosa', 'Lemon Squeezy'],
+      scene: 'audio',
+      link: '#',
+      featured: true,
+    },
+    {
+      title: 'NexusForge',
+      tag: 'Digital Agency · Web',
+      desc: 'Premium landing page for a digital agency — live at nexusforge-hazel.vercel.app. Integrates Formspree contact forms and Google Analytics, with smooth animations and a high-end responsive aesthetic.',
+      stack: ['TypeScript', 'HTML', 'CSS', 'Vercel', 'Formspree', 'Google Analytics'],
+      scene: 'network',
+      link: 'https://nexusforge-hazel.vercel.app',
+    },
+    {
+      title: 'Hospital Management System',
+      tag: 'Python · Impact',
+      desc: 'Comprehensive software solution to digitize non-computerized hospitals in rural areas. Includes full source code, presentation, project report, and demonstration video.',
+      stack: ['Python'],
+      scene: 'dna',
+      link: 'https://github.com/Mokshith-11/HOSPITAL-MANAGEMENT-SYSTEM',
+    },
+    {
+      title: 'Spotify & Netflix Clones',
+      tag: 'Frontend · UI',
+      desc: 'Pixel-faithful recreations of Spotify\'s web player and Netflix\'s landing page — built purely with HTML & CSS, focusing on grid/flexbox layouts, responsive design, and media-rich dark interfaces.',
+      stack: ['HTML', 'CSS', 'Flexbox', 'CSS Grid'],
+      scene: 'equalizer',
+      link: 'https://github.com/Mokshith-11/Spotify-Basic-Clone',
+    },
+    {
+      title: 'Sri Krishna Bhavan',
+      tag: 'Freelance · Web',
+      desc: 'A dedicated website built for a local restaurant client — demonstrating real-world freelance delivery, applying web development skills to tangible business requirements.',
+      stack: ['HTML', 'CSS'],
+      scene: 'bloom',
+      link: 'https://github.com/Mokshith-11',
+    },
+  ];
+
+  function ProjectCard({ project, i, inView }) {
+    const [hovered, setHovered] = useState(false);
+    const [visible, setVisible] = useState(false);
+    useEffect(() => { if (inView) { setTimeout(() => setVisible(true), i * 120); } }, [inView]);
+    return (
+      <div
+        style={{ opacity: visible?1:0, transform: visible?'none':'translateY(50px)', transition: `opacity 0.8s ease ${i*0.12}s, transform 0.8s cubic-bezier(0.22,1,0.36,1) ${i*0.12}s`,
+          gridColumn: project.featured ? 'span 2' : undefined }}
+        className="liquid-glass rounded-3xl overflow-hidden"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <div style={{ position: 'relative', overflow: 'hidden', aspectRatio: project.featured ? '21/7' : '16/9', background: '#0a0a0a' }}>
+          <ProjectCanvas sceneType={project.scene} hovered={hovered} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent 60%)' }} />
+        </div>
+        <div style={{ padding: '1.75rem 2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', letterSpacing: '0.2em', textTransform: 'uppercase' }}>{project.tag}</span>
+            <a href={project.link} className="liquid-glass rounded-full" style={{ padding: '0.4rem', display: 'flex', color: 'white' }}><IconArrow /></a>
+          </div>
+          <h3 style={{ fontFamily: "'Instrument Serif', serif", fontSize: project.featured ? '2rem' : '1.4rem', color: 'white', letterSpacing: '-0.02em', fontWeight: 400, marginBottom: '0.6rem' }}>{project.title}</h3>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem', lineHeight: 1.65, marginBottom: '1.25rem' }}>{project.desc}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+            {project.stack.map(s => (
+              <span key={s} className="liquid-glass rounded-full" style={{ padding: '0.25rem 0.75rem', fontSize: '0.7rem', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.05em' }}>{s}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function Projects() {
+    const ref = useRef(null);
+    const inView = useInView(ref, { once: true, margin: '-80px' });
+    return (
+      <section id="projects" ref={ref} style={{ background: '#000', padding: '6rem 1.5rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal><Label>Selected Work</Label></Reveal>
+          <Reveal delay={0.1}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '3rem' }}>
+              <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'white', letterSpacing: '-0.03em', fontWeight: 400, margin: 0 }}>Projects</h2>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }} className="hidden md:block">4 projects</span>
+            </div>
+          </Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }} className="grid-cols-1 md:grid-cols-2">
+            {PROJECTS.map((p, i) => <ProjectCard key={p.title} project={p} i={i} inView={inView} />)}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Skills ── */
+  const SKILLS = [
+    { category: 'AI / ML', items: ['CNN', 'BiLSTM', 'Self-Attention', 'Siamese Networks', 'Contrastive Loss', 'Scikit-learn'] },
+    { category: 'Audio & Signal', items: ['MFCC', 'Mel Spectrogram', 'Chroma', 'Spectral Contrast', 'ZCR', 'Librosa'] },
+    { category: 'Languages', items: ['Python', 'Java', 'JavaScript', 'HTML/CSS', 'SQL'] },
+    { category: 'Cloud & DevOps', items: ['AWS Developer Associate', 'AWS Cloud Practitioner', 'Google Cloud', 'Oracle Cloud'] },
+    { category: 'Frameworks & Tools', items: ['Streamlit', 'UiPath', 'MongoDB', 'ServiceNow', 'Git', 'Lemon Squeezy'] },
+  ];
+
+  function Skills() {
+    return (
+      <section id="skills" style={{ background: 'radial-gradient(ellipse at center, rgba(255,255,255,0.02) 0%, transparent 60%), #000', padding: '6rem 1.5rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal><Label>Technical Skills</Label></Reveal>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'white', letterSpacing: '-0.03em', fontWeight: 400, marginBottom: '3rem' }}>
+              What I <em style={{ color: 'rgba(255,255,255,0.5)' }}>build with</em>
+            </h2>
+          </Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            {SKILLS.map((group, gi) => (
+              <Reveal key={group.category} delay={gi * 0.08}>
+                <div className="liquid-glass rounded-3xl" style={{ padding: '1.75rem' }}>
+                  <Label>{group.category}</Label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', marginTop: '1rem' }}>
+                    {group.items.map(item => (
+                      <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}><IconCheck /></span>
+                        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.875rem' }}>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Experience ── */
+  const EXPERIENCE = [
+    {
+      company: 'Cognifyz Technologies',
+      role: 'AI/ML Intern',
+      period: '2024',
+      highlights: [
+        'Built end-to-end ML pipelines covering data ingestion, feature engineering, model training and evaluation.',
+        'Experimented with classification & regression algorithms, comparing F1, AUC-ROC to select optimal deployment models.',
+        'Participated in Agile sprints, model versioning, hyperparameter tuning and production-readiness workflows.',
+      ],
+    },
+    {
+      company: 'Veena Computer',
+      role: 'Software Intern — Asset Management System',
+      period: 'Jul – Sep 2024',
+      highlights: [
+        'Built core modules for a full-stack Asset Management System — registration, lifecycle tracking, and reporting.',
+        'Optimized SQL queries via indexing, boosting search performance by 40% and reducing response time by 15%.',
+        'Integrated RESTful APIs for real-time tracking; deployed role-based access control (RBAC) for data security.',
+      ],
+    },
+  ];
+
+  function Experience() {
+    return (
+      <section id="experience" style={{ background: '#000', padding: '6rem 1.5rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal><Label>Experience</Label></Reveal>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'white', letterSpacing: '-0.03em', fontWeight: 400, marginBottom: '3rem' }}>
+              Where I've <em style={{ color: 'rgba(255,255,255,0.5)' }}>worked</em>
+            </h2>
+          </Reveal>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {EXPERIENCE.map((exp, i) => (
+              <Reveal key={exp.company} delay={i * 0.15}>
+                <div className="liquid-glass rounded-3xl" style={{ padding: '2rem 2.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                    <div>
+                      <h3 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '1.5rem', color: 'white', fontWeight: 400, margin: '0 0 0.25rem' }}>{exp.company}</h3>
+                      <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.875rem', margin: 0 }}>{exp.role}</p>
+                    </div>
+                    <span className="liquid-glass rounded-full" style={{ padding: '0.3rem 1rem', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', flexShrink: 0 }}>{exp.period}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    {exp.highlights.map((h, hi) => (
+                      <div key={hi} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.35)', marginTop: '0.1rem', flexShrink: 0 }}><IconCheck /></span>
+                        <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.9rem', lineHeight: 1.65, margin: 0 }}>{h}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Certifications ── */
+  const CERTS = [
+    'Oracle Cloud Infrastructure 2025 — Certified Generative AI Professional',
+    'Oracle Cloud Infrastructure 2025 — Certified Data Science Professional',
+    'AWS Certified Developer – Associate',
+    'AWS Certified Cloud Practitioner',
+    'Google Cloud Certification',
+    'ServiceNow Micro-Certification',
+    'Java (Basic) — HackerRank',
+    'Python Essentials — Cisco Networking Academy',
+  ];
+
+  function Certifications() {
+    return (
+      <section style={{ background: 'radial-gradient(ellipse at bottom, rgba(255,255,255,0.02) 0%, transparent 60%), #000', padding: '6rem 1.5rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal><Label>Certifications</Label></Reveal>
+          <Reveal delay={0.1}>
+            <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2rem, 5vw, 3.5rem)', color: 'white', letterSpacing: '-0.03em', fontWeight: 400, marginBottom: '3rem' }}>
+              Credentials &amp; <em style={{ color: 'rgba(255,255,255,0.5)' }}>Qualifications</em>
+            </h2>
+          </Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {CERTS.map((cert, i) => (
+              <Reveal key={cert} delay={i * 0.06}>
+                <div className="liquid-glass rounded-2xl" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)', flexShrink: 0 }}><IconCheck /></span>
+                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', lineHeight: 1.5, margin: 0 }}>{cert}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Education ── */
+  function Education() {
+    return (
+      <section style={{ background: '#000', padding: '4rem 1.5rem 2rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <Reveal><Label>Education</Label></Reveal>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginTop: '1.5rem' }}>
+            {[
+              { degree: 'B.E. Computer Science & Engineering', school: 'Panimalar Engineering College, Chennai', period: '2022 – 2026', detail: 'CGPA: 7.5' },
+              { degree: 'Board of Intermediate Education (HSE)', school: 'Narayana Junior College', period: '2020 – 2022', detail: '75%' },
+            ].map((edu, i) => (
+              <Reveal key={i} delay={i * 0.1}>
+                <div className="liquid-glass rounded-3xl" style={{ padding: '2rem' }}>
+                  <span className="liquid-glass rounded-full" style={{ display: 'inline-block', padding: '0.2rem 0.9rem', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '1rem' }}>{edu.period}</span>
+                  <h3 style={{ fontFamily: "'Instrument Serif', serif", fontSize: '1.2rem', color: 'white', fontWeight: 400, marginBottom: '0.4rem' }}>{edu.degree}</h3>
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', margin: '0 0 0.5rem' }}>{edu.school}</p>
+                  <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.8rem', margin: 0 }}>{edu.detail}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── Contact ── */
+  function Contact() {
+    const videoRef = useRef(null);
+    useFadeVideo(videoRef);
+
+    return (
+      <section id="contact" style={{ background: '#000', padding: '6rem 1.5rem 4rem', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '72rem', margin: '0 auto' }}>
+          <div className="liquid-glass rounded-3xl overflow-hidden" style={{ position: 'relative' }}>
+            <video
+              ref={videoRef}
+              src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260402_054547_9875cfc5-155a-4229-8ec8-b7ba7125cbf8.mp4"
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}
+              muted autoPlay playsInline preload="auto"
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
+            <div style={{ position: 'relative', zIndex: 1, padding: '4rem 3rem', textAlign: 'center' }}>
+              <Reveal>
+                <Label>Contact</Label>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 'clamp(2.5rem, 6vw, 5rem)', color: 'white', letterSpacing: '-0.03em', fontWeight: 400, marginBottom: '1rem' }}>
+                  Let's build <em style={{ color: 'rgba(255,255,255,0.6)' }}>something</em>
+                </h2>
+              </Reveal>
+              <Reveal delay={0.2}>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '1rem', maxWidth: '28rem', margin: '0 auto 2.5rem', lineHeight: 1.7 }}>
+                  Open to AI/GenAI Engineering, Data Science, and MLOps roles. Based in Chennai, India — available globally.
+                </p>
+              </Reveal>
+              <Reveal delay={0.3}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center' }}>
+                  {[
+                    { icon: <IconMail />, label: 'vinnyvvinny8@gmail.com', href: 'mailto:vinnyvvinny8@gmail.com' },
+                    { icon: <IconPhone />, label: '+91 9000851235', href: 'tel:+919000851235' },
+                    { icon: <IconGithub />, label: 'GitHub', href: 'https://github.com/Mokshith-11' },
+                    { icon: <IconLinkedin />, label: 'LinkedIn', href: '#' },
+                  ].map((c, i) => (
+                    <a key={i} href={c.href} className="liquid-glass rounded-full"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.65rem 1.5rem', color: 'rgba(255,255,255,0.8)', fontSize: '0.875rem', transition: 'color 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.color='white'}
+                      onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.8)'}
+                    >
+                      {c.icon}<span>{c.label}</span>
+                    </a>
+                  ))}
+                </div>
+              </Reveal>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2rem 0', flexWrap: 'wrap', gap: '1rem' }}>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>© 2026 Vignesh Mokshith Francis</span>
+            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.8rem' }}>Chennai, India</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  /* ── App ── */
+  function App() {
+    return (
+      <div style={{ background: '#000' }}>
+        <Navbar />
+        <Hero />
+        <About />
+        <Projects />
+        <Skills />
+        <Experience />
+        <Certifications />
+        <Education />
+        <Contact />
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
